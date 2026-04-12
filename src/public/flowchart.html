@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>System Architecture Flowchart</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: "Courier New", Courier, monospace;
+        background: #c0c0c0;
+        min-height: 100vh;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .container {
+        background: #ffffff;
+        border: 3px solid #000000;
+        padding: 30px;
+        max-width: 1200px;
+        width: 100%;
+      }
+
+      h1 {
+        text-align: center;
+        color: #000000;
+        margin-bottom: 6px;
+        font-size: 2em;
+        font-weight: bold;
+        text-decoration: underline;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #000000;
+        margin-bottom: 40px;
+        font-size: 1em;
+      }
+
+      /* ── Diagram layout ─────────────────────────────────────────────── */
+      .diagram {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 30px 0;
+      }
+
+      .row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        position: relative;
+      }
+
+      /* ── Boxes ──────────────────────────────────────────────────────── */
+      .box {
+        background: #ffff99;
+        color: #000000;
+        padding: 24px 32px;
+        border: 3px solid #000000;
+        text-align: center;
+        min-width: 180px;
+        cursor: pointer;
+      }
+      .box:hover  { filter: brightness(0.93); }
+      .box:active { border-style: inset; }
+
+      .box-title { font-size: 1.2em; font-weight: bold; margin-bottom: 6px; }
+      .box-desc  { font-size: 0.85em; }
+
+      .user-box     { background: #ff99cc; }
+      .frontend-box { background: #99ccff; }
+      .backend-box  { background: #99ff99; }
+      .db-box       { background: #ffcc99; }
+
+      /* ── Arrows & labels ────────────────────────────────────────────── */
+      .arrow-down {
+        display: flex;
+        justify-content: center;
+        font-size: 1.6em;
+        font-weight: bold;
+        color: #000;
+        line-height: 1;
+        margin: 2px 0;
+      }
+
+      .flow-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        padding: 4px 0;
+      }
+
+      .flow-label {
+        background: #ffffff;
+        color: #000000;
+        padding: 10px 20px;
+        border: 3px solid #000000;
+        font-size: 0.85em;
+        font-weight: bold;
+        max-width: 560px;
+        text-align: center;
+      }
+      .flow-label.request  { background: #ccccff; }
+      .flow-label.response { background: #ccffcc; }
+
+      .arrow-graphic {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #000;
+        line-height: 1;
+      }
+
+      /* ── Tooltip ────────────────────────────────────────────────────── */
+      #tooltip {
+        display: none;
+        position: fixed;
+        background: #ffffe0;
+        border: 2px solid #000;
+        padding: 6px 10px;
+        font-size: 0.8em;
+        font-family: "Courier New", monospace;
+        pointer-events: none;
+        z-index: 9999;
+        max-width: 300px;
+      }
+
+      /* ── Modal ──────────────────────────────────────────────────────── */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 2000;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal.active { display: flex; }
+
+      .modal-content {
+        background: #ffffff;
+        padding: 36px;
+        border: 3px solid #000000;
+        max-width: 620px;
+        width: 92%;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 8px; right: 8px;
+        background: #c0c0c0;
+        border: 2px outset #c0c0c0;
+        width: 28px; height: 28px;
+        font-size: 1.2em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+      .modal-close:hover  { background: #a0a0a0; }
+      .modal-close:active { border-style: inset; }
+
+      .modal-title {
+        font-size: 1.6em;
+        font-weight: bold;
+        text-decoration: underline;
+        margin-bottom: 18px;
+        padding-right: 36px;
+        color: #000;
+      }
+
+      .modal-section { margin: 16px 0; }
+
+      .modal-section h3 {
+        font-size: 1em;
+        font-weight: bold;
+        text-decoration: underline;
+        margin-bottom: 8px;
+        color: #000;
+      }
+
+      .modal-section ul { list-style: none; padding-left: 0; }
+
+      .modal-section li {
+        padding: 5px 0;
+        border-bottom: 1px dotted #ccc;
+        font-size: 0.9em;
+        color: #000;
+      }
+      .modal-section li::before { content: "* "; font-weight: bold; }
+
+      .code-block {
+        background: #f0f0f0;
+        border: 2px solid #000;
+        padding: 12px;
+        font-family: "Courier New", monospace;
+        font-size: 0.8em;
+        margin-top: 8px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="container">
+      <h1>System Architecture</h1>
+      <p class="subtitle">Click any box for details. Each layer represents a part of the application stack.</p>
+
+      <div class="diagram">
+
+        <!-- Row 1: User -->
+        <div class="row">
+          <div class="box user-box" data-tooltip="The person using the app in their browser">
+            <div class="box-title">👤 User</div>
+            <div class="box-desc">Browser</div>
+          </div>
+        </div>
+
+        <div class="flow-container">
+          <div class="arrow-down">▼</div>
+          <div class="flow-label request">HTTP Request (page load / API call)</div>
+          <div class="arrow-down">▼</div>
+        </div>
+
+        <!-- Row 2: Frontend -->
+        <div class="row">
+          <div class="box frontend-box" data-tooltip="HTML, CSS, and JavaScript served as static files">
+            <div class="box-title">🗺 Frontend</div>
+            <div class="box-desc">index.html + Leaflet.js</div>
+          </div>
+        </div>
+
+        <div class="flow-container">
+          <div class="arrow-down">▼</div>
+          <div class="flow-label request">fetch("/api/sites") · fetch("/api/report")</div>
+          <div class="arrow-down">▼</div>
+        </div>
+
+        <!-- Row 3: Backend -->
+        <div class="row">
+          <div class="box backend-box" data-tooltip="Node.js + Express — two routes only">
+            <div class="box-title">⚙ Backend</div>
+            <div class="box-desc">Node.js / Express</div>
+          </div>
+        </div>
+
+        <div class="flow-container">
+          <div class="arrow-down">▼</div>
+          <div class="flow-label request">Supabase REST API (HTTPS)</div>
+          <div class="arrow-down">▼</div>
+        </div>
+
+        <!-- Row 4: Database -->
+        <div class="row">
+          <div class="box db-box" data-tooltip="Supabase hosted Postgres — one table: locations">
+            <div class="box-title">🗄 Database</div>
+            <div class="box-desc">Supabase (Postgres)</div>
+          </div>
+        </div>
+
+        <div class="flow-container">
+          <div class="arrow-down">▲</div>
+          <div class="flow-label response">JSON rows returned</div>
+          <div class="arrow-down">▲</div>
+        </div>
+
+        <!-- Row 5: repeat upward label -->
+        <div class="row">
+          <div class="flow-label response" style="min-width:300px">
+            Response travels back up the same chain
+          </div>
+        </div>
+
+      </div><!-- end .diagram -->
+    </div><!-- end .container -->
+
+    <!-- Tooltip -->
+    <div id="tooltip"></div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+        <div id="modal-body"></div>
+      </div>
+    </div>
+
+    <script>
+      const componentDetails = {
+        user: {
+          title: "User / Browser",
+          sections: [
+            {
+              heading: "What This Is",
+              content: [
+                "Any modern browser (Chrome, Firefox, Edge, Safari)",
+                "The user opens the app at http://localhost:8080",
+                "No login or authentication required in this template",
+              ],
+            },
+            {
+              heading: "What The User Can Do",
+              content: [
+                "See all locations plotted as markers on the Leaflet map",
+                "Click sidebar buttons to select individual locations",
+                "Right-click a button to deselect a location",
+                "Hold Shift and click to multi-select",
+                "Click 'Load All' to plot every location at once",
+                "Click 'Run Report' to open a quantity summary popup",
+              ],
+            },
+          ],
+        },
+        frontend: {
+          title: "Frontend",
+          sections: [
+            {
+              heading: "Files",
+              content: [
+                "index.html — main page shell, loads Leaflet CSS/JS",
+                "css/styles.css — retro 90s styling",
+                "js/script.js — all map and selection logic",
+                "report.html — report popup, queries Supabase directly",
+                "flowchart.html — this page",
+              ],
+            },
+            {
+              heading: "Leaflet.js",
+              content: [
+                "Loaded from CDN (unpkg.com) — no local install needed",
+                "Three map instances: main US map, Alaska inset, Hawaii inset",
+                "Markers use circleMarker with tooltip showing name + quantity",
+                "Map redraws markers on pan/zoom automatically",
+              ],
+            },
+            {
+              heading: "report.html — Direct Supabase Access",
+              content: [
+                "Selected location IDs are passed in the URL: report.html?ids=1,2,3",
+                "The report page reads those IDs and calls the Supabase REST API directly",
+                "No sessionStorage — data comes straight from the database",
+                "Displays a table: location name, quantity, grand total row",
+              ],
+            },
+          ],
+        },
+        backend: {
+          title: "Backend — Node.js / Express",
+          sections: [
+            {
+              heading: "What It Does",
+              content: [
+                "Serves all static files from the public/ folder",
+                "Exposes two API routes",
+                "Talks to Supabase using the REST API (no SDK)",
+              ],
+            },
+            {
+              heading: "GET /api/sites",
+              content: [
+                "Returns all rows from the locations table",
+                "Used on page load to populate the sidebar and map",
+                "Fields returned: id, name, latitude, longitude, quantity",
+              ],
+            },
+            {
+              heading: "POST /api/report",
+              content: [
+                "Accepts { ids: [1, 2, 3] } in the request body",
+                "Queries Supabase for those specific location rows",
+                "Returns each row plus a computed grandTotal",
+                "Note: report.html also queries Supabase directly — this route is available for server-side report use cases",
+              ],
+            },
+            {
+              heading: "Dependencies",
+              content: [
+                "express — the only npm dependency",
+                "Node's built-in fetch is used for Supabase calls (Node 18+)",
+                "No AWS SDK, no mssql, no authentication middleware",
+              ],
+            },
+          ],
+        },
+        database: {
+          title: "Database — Supabase (Postgres)",
+          sections: [
+            {
+              heading: "What It Is",
+              content: [
+                "Supabase is a hosted Postgres service with a built-in REST API",
+                "Free tier is sufficient for development and demos",
+                "No local database setup required",
+              ],
+            },
+            {
+              heading: "The locations Table",
+              content: [
+                "id          — integer, primary key",
+                "name        — text, display name of the location",
+                "latitude    — float, map coordinate",
+                "longitude   — float, map coordinate",
+                "quantity    — integer, the value shown in reports",
+              ],
+            },
+            {
+              heading: "SQL to Create the Table",
+              code:
+`CREATE TABLE locations (
+  id        SERIAL PRIMARY KEY,
+  name      TEXT    NOT NULL,
+  latitude  FLOAT   NOT NULL,
+  longitude FLOAT   NOT NULL,
+  quantity  INTEGER NOT NULL DEFAULT 0
+);`,
+            },
+            {
+              heading: "Sample Data",
+              code:
+`INSERT INTO locations (name, latitude, longitude, quantity)
+VALUES
+  ('New York',    40.7128,  -74.0060,  120),
+  ('Chicago',     41.8781,  -87.6298,   95),
+  ('Houston',     29.7604,  -95.3698,  210),
+  ('Phoenix',     33.4484, -112.0740,   77),
+  ('Los Angeles', 34.0522, -118.2437,  180);`,
+            },
+          ],
+        },
+      };
+
+      // ── Tooltip ──────────────────────────────────────────────────────────
+      const tooltip = document.getElementById("tooltip");
+      document.querySelectorAll(".box").forEach((box) => {
+        box.addEventListener("mouseenter", () => {
+          const t = box.getAttribute("data-tooltip");
+          if (t) { tooltip.textContent = t; tooltip.style.display = "block"; }
+        });
+        box.addEventListener("mousemove", (e) => {
+          tooltip.style.left = (e.pageX + 14) + "px";
+          tooltip.style.top  = (e.pageY + 14) + "px";
+        });
+        box.addEventListener("mouseleave", () => {
+          tooltip.style.display = "none";
+        });
+
+        // ── Modal on click ────────────────────────────────────────────────
+        box.addEventListener("click", () => {
+          let type = "";
+          if (box.classList.contains("user-box"))     type = "user";
+          if (box.classList.contains("frontend-box")) type = "frontend";
+          if (box.classList.contains("backend-box"))  type = "backend";
+          if (box.classList.contains("db-box"))       type = "database";
+          if (type) showModal(type);
+        });
+      });
+
+      function showModal(type) {
+        const details = componentDetails[type];
+        if (!details) return;
+
+        let html = `<h2 class="modal-title">${details.title}</h2>`;
+        details.sections.forEach((section) => {
+          html += `<div class="modal-section">`;
+          if (section.heading) html += `<h3>${section.heading}</h3>`;
+          if (section.content) {
+            html += `<ul>`;
+            section.content.forEach((item) => { html += `<li>${item}</li>`; });
+            html += `</ul>`;
+          }
+          if (section.code) {
+            html += `<div class="code-block">${section.code.replace(/</g, "&lt;")}</div>`;
+          }
+          html += `</div>`;
+        });
+
+        document.getElementById("modal-body").innerHTML = html;
+        document.getElementById("modal").classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeModal() {
+        document.getElementById("modal").classList.remove("active");
+        document.body.style.overflow = "auto";
+      }
+
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === document.getElementById("modal")) closeModal();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeModal();
+      });
+    </script>
+  </body>
+</html>

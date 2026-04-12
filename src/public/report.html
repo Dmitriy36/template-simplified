@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Report</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Courier New", Courier, monospace;
+        background: #c0c0c0;
+        padding: 20px;
+      }
+
+      h2 {
+        font-size: 1.4em;
+        font-weight: bold;
+        text-decoration: underline;
+        margin-bottom: 16px;
+        color: #000;
+      }
+
+      #summary {
+        font-size: 0.9em;
+        margin-bottom: 12px;
+        color: #333;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #fff;
+        border: 3px solid #000;
+      }
+
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 8px 12px;
+        text-align: left;
+      }
+
+      th {
+        background: #ffff99;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+      }
+
+      tr:nth-child(even) td {
+        background: #f0f0f0;
+      }
+
+      td.qty {
+        text-align: right;
+        font-weight: bold;
+      }
+
+      .grand-total td {
+        background: #99ff99 !important;
+        font-weight: bold;
+        border-top: 3px solid #000;
+      }
+
+      .grand-total td.qty {
+        font-size: 1.1em;
+      }
+
+      #error-msg {
+        color: red;
+        font-weight: bold;
+        padding: 20px;
+      }
+
+      #loading-msg {
+        color: #333;
+        padding: 20px;
+      }
+
+      button {
+        font-family: "Courier New", Courier, monospace;
+        font-size: 13px;
+        font-weight: bold;
+        padding: 6px 14px;
+        cursor: pointer;
+        border: 2px outset #c0c0c0;
+        background: #d4d0c8;
+        color: #000;
+        margin-bottom: 14px;
+      }
+      button:active {
+        border-style: inset;
+      }
+      button:hover {
+        background: #e4e0d8;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Quantity Report</h2>
+    <div id="summary"></div>
+    <button onclick="window.print()">Print</button>
+    <div id="content">
+      <div id="loading-msg">Loading report...</div>
+    </div>
+
+    <script>
+      // ── Supabase config (must match server.js) ──────────────────────────
+      // Replace with your own values.
+
+      async function loadReport() {
+        const params = new URLSearchParams(window.location.search);
+        const idsParam = params.get("ids");
+
+        if (!idsParam) {
+          document.getElementById("content").innerHTML =
+            '<div id="error-msg">No location IDs provided.</div>';
+          return;
+        }
+
+        const ids = idsParam.split(",").map(Number).filter(Boolean);
+
+        try {
+          const response = await fetch("/api/report", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids }),
+          });
+
+          if (!response.ok)
+            throw new Error(`Server returned ${response.status}`);
+
+          const { rows } = await response.json();
+
+          const grandTotal = rows.reduce(
+            (sum, r) => sum + (r.quantity || 0),
+            0,
+          );
+
+          document.getElementById("summary").textContent =
+            `${rows.length} location(s) selected`;
+
+          let html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Location Name</th>
+                  <th class="qty">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          rows.forEach((row) => {
+            html += `
+              <tr>
+                <td>${row.id}</td>
+                <td>${row.name}</td>
+                <td class="qty">${(row.quantity ?? 0).toLocaleString()}</td>
+              </tr>
+            `;
+          });
+
+          html += `
+              </tbody>
+              <tfoot>
+                <tr class="grand-total">
+                  <td colspan="2">Grand Total</td>
+                  <td class="qty">${grandTotal.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+          `;
+
+          document.getElementById("content").innerHTML = html;
+        } catch (err) {
+          console.error(err);
+          document.getElementById("content").innerHTML =
+            `<div id="error-msg">Error loading report: ${err.message}</div>`;
+        }
+      }
+
+      loadReport();
+    </script>
+
+    <script>
+      // Close with Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") window.close();
+      });
+    </script>
+  </body>
+</html>
